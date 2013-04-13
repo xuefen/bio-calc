@@ -1,0 +1,261 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>G-F指数 G指数 F指数 -计算</title>
+<style type="text/css">
+body{margin:0;padding:0;color: #5EB0DE;}
+.left{float:left;}
+.clear{clear:both;}
+.input-text {background-color: #fff;border: 1px solid #5EB0DE;padding: 2px 5px;width:590px;color: #5EB0DE;margin-left:40px;margin-top:7px;outline:none;height:400px;}
+table{background-color:#5EB0DE;width:602px;margin:20px 40px;}
+table td{background-color:#eee;color:#f00;white-space:normal;word-break:break-all;padding:2px 10px;}
+td.right{text-align:right;width:180px;color:#5EB0DE;}
+h4{margin:32px 0 0 40px;}
+.green_box{color:green;border:1px solid #5EB0DE;padding:5px;margin:10px;}
+.ladin{font-style:italic;}
+</style>
+<script language="javascript">
+var otherData = [];
+function calculate(t){
+  var data = t.value.split(/[\n\f\r]+/g),cn='\\u4E00-\\u9FA5\\uE000-\\uF8FF'
+      muReg = new RegExp('[^'+cn+']*(['+cn+']+\\u76ee)([a-zA-Z\\s]*).*'),
+	  keReg = new RegExp('[^'+cn+']*(['+cn+']+\\u79d1)([a-zA-Z\\s]*).*'),
+	  shuReg = new RegExp('[^'+cn+']*(['+cn+']+\\u5c5e)([a-zA-Z\\s]*).*'),
+	  zhongReg = new RegExp('^[\\.\\s0-9'+cn+']*?(['+cn+']+)([a-zA-Z\\s]*)(\\d*)\\s*$'),
+	  result=null,
+	  curKey = [-1,-1,-1,-1],
+      category = {};
+  var i,m,k,s,z;
+  for(i=0;i<data.length;i++){
+	  //如果是目
+      if(result = data[i].match(muReg)){
+		   curKey[0]++;
+		   curKey[1] = -1;
+		   curKey[2] = -1;
+		   curKey[3] = -1;
+		   category[curKey[0]] = {'n':result[1],'ld':trim(result[2]),'s':{}};
+	  }else if(result = data[i].match(keReg)){
+	  //如果是科
+	       if(/\u4e9a\u79d1$/.test(result[1])) continue;
+		   if(!category[curKey[0]]){
+		      //console.log(category);
+			  //console.log(curKey);
+			  continue;
+		   }
+	       curKey[1]++;
+		   curKey[2] = -1;
+		   curKey[3] = -1;
+	       category[curKey[0]]['s'][curKey[1]] = {'n':result[1],'ld':trim(result[2]),'s':{}};
+      }else if(result = data[i].match(shuReg)){
+	  //如果是属
+	       if(!(category[curKey[0]] && category[curKey[0]]['s'][curKey[1]])){
+			   //console.log(category);
+		       //console.log(curKey);
+			   continue;
+		   }
+           curKey[2]++;
+		   curKey[3] = -1;
+	       category[curKey[0]]['s'][curKey[1]]['s'][curKey[2]] = {'n':result[1],'ld':trim(result[2]),'s':{}};
+	  }else if(result = data[i].match(zhongReg)){
+	  //如果是种
+	       if(!(category[curKey[0]] && category[curKey[0]]['s'][curKey[1]] && category[curKey[0]]['s'][curKey[1]]['s'][curKey[2]])){
+			   //console.log(category);
+		       //console.log(curKey);
+			   continue;
+		   }
+           curKey[3]++;
+		   category[curKey[0]]['s'][curKey[1]]['s'][curKey[2]]['s'][curKey[3]] = {'n':result[1],'ld':trim(result[2]),'count':result[3]};
+	  }else{
+	  //其它数据
+        otherData.push(data[i]);
+	  }
+   }
+   var html = '';
+   var sumF = 0,sumG = 0,shuGi=[],sGSum=0;
+   for(m in category){
+	  var mu = category[m];
+	  if(mu['n']){
+		  html += '<div class="green_box">'+getNum(parseInt(m)+1,1)+'.'+mu['n']+'(<span class="ladin">'+mu['ld']+'</span>)';
+		  var kes = mu['s'];
+		  for(k in kes){
+		     var ke = kes[k];
+			 if(ke['n']){
+				var skSum = 0,
+				    shuFi = [];
+
+				html += '<div class="green_box">'+getNum(parseInt(k)+1,2)+'.'+ke['n']+'&nbsp;(<span class="ladin">'+ke['ld']+'</span>)';
+			    var shus = ke['s'];
+				for(s in shus){
+					var shu = shus[s];
+				    if(shu['n']){
+						html += '<div class="green_box">'+getNum(parseInt(s)+1,3)+'.'+shu['n']+'&nbsp;(<span class="ladin">'+shu['ld']+'</span>)<div></div>';
+						var zhongs = shu['s'];
+						var shuSum = 0;
+						for(z in zhongs){
+							var zhong = zhongs[z];
+							if(zhong['n']){
+							    html += '<span class="green_box" style="display:inline-block;">'+(parseInt(z)+1)+'.'+zhong['n']+'&nbsp;(<span class="ladin">'+zhong['ld']+'</span>)<span style="color:red;">'+zhong['count']+'</span></span>';
+								skSum++;
+								shuSum++;
+								sGSum++;
+							}
+						}
+						if(shuSum>0){
+							shuFi.push(shuSum);
+							shuGi.push(shuSum)
+						}
+						html += '</div>';
+					}
+				}
+				for(var a =0;a<shuFi.length;a++){
+					var pi = shuFi[a]/skSum;
+				    sumF -= pi*LN(pi);
+				}
+				html += '</div>';
+			 }
+		  }
+		  html += '</div>';
+	  }
+   }
+   for(var a =0;a<shuGi.length;a++){
+		var qi = shuGi[a]/sGSum;
+		sumG -= qi*LN(qi);
+   }
+   batch_html({
+   'unValid':otherData.join('<br/>'),
+   'valid':html,
+   'F':sumF,
+   'G':sumG,
+   'G_F':sumF==0?(sumG==0?'0':'负无穷大'):(1-(sumG/sumF))
+   });
+   var box = document.getElementsByClassName("green_box");
+    for(var k in box)
+	{
+		var current = box[k];
+		current.onmouseover = function(){
+			this.style.backgroundColor='#fcc';
+		}
+		current.onmouseout = function(){
+			this.style.backgroundColor='#fff'
+		}
+	}
+}
+</script>
+</head>
+<body>
+<h4 style="color:green;">G-F指数&nbsp;计算</h4>
+<div> 
+ <textarea rows="10" id="data" class="input-text" onkeyup="calculate(this)"></textarea>
+</div>
+<table cellspacing="1">
+	<tr>
+		<td class="right">F指数:</td>
+		<td id="F"></td>
+	</tr>
+	<tr>
+		<td class="right">G指数:</td>
+		<td id="G"></td>
+	</tr>
+	 <tr>
+		<td class="right">G-F指数:</td>
+		<td id="G_F"></td>
+	</tr>
+</table>
+<div>统计到的数据：<div id="valid"></div></div>
+<div>没有进入统计的：<div id="unValid" style="color:red;"></div></div>
+<script language="javascript">
+var tr = document.getElementsByTagName("tr");
+for(var k in tr)
+{
+	var current = tr[k];
+	current.onmouseover = function(){
+		var child = this.childNodes
+		for(var k in child)
+		{
+			if(child[k].style)
+			  child[k].style.backgroundColor='#fcc';
+		}
+	}
+    current.onmouseout = function(){
+    	var child = this.childNodes;
+    	for(var k in child)
+    	{
+    		if(child[k].style)
+			 child[k].style.backgroundColor='#eee'
+        }
+	}
+}
+var textarea = document.getElementById("data");
+textarea.onmouseover = function(){
+	this.style.backgroundColor = 'rgb(245,245,245)';
+	this.style.color = "rgb(10,10,10)";
+}
+textarea.onmouseout = function(){
+	 this.style.backgroundColor = '#fff';
+	 this.style.color = "#5EB0DE";
+}
+
+//取得以e为底数的对数
+function LN(n)
+{
+   return Math.log(n);
+}
+//将html赋值给相应的ID
+function batch_html(array)
+{
+	for(var k in array)
+	{
+		var obj = document.getElementById(k);
+		if(obj)
+		{
+			obj.innerHTML = array[k];
+		}
+	}
+}
+function trim(s){
+	return s.replace(/^\s*/,'').replace(/\s*$/,'');
+}
+function getNum(num,t){
+	num = parseInt(num);
+	if(num>0){
+	   switch(t){
+		   case 1:
+			 var lar = ['','Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ','Ⅷ','Ⅸ','Ⅹ'];
+			 if(num<11){
+			   return lar[num];
+			 }else if(num<100){
+			    return (Math.floor(num/10)==1?'':lar[Math.floor(num/10)])+'Ⅹ'+(num%10==0?'':lar[num%10]);
+			 }else{
+			    var s = num+'',r='';
+				for(var i=0;i<s.length;i++){
+				   r += lar[s[i]];
+				}
+				return r;
+			 }
+		   case 2:
+			 var cn = ['零','一','二','三','四','五','六','七','八','九','十'];
+			 if(num<11){
+				 return cn[num];
+			 }else if(num<100){
+				return cn[Math.floor(num/10)]+'十'+(num%10==0?'':cn[num%10]);
+			 }else{
+				var s = num+'',r='';
+				for(var i=0;i<s.length;i++){
+				   r += cn[s[i]];
+				}
+				return r;
+			 }
+			 
+		   case 3:
+			 return '<b>'+num+'</b>';
+		   default:;
+		}
+	}
+	return num;
+  
+}
+calculate(document.getElementById('data'));
+</script>
+</body>
+</html>

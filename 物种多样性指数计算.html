@@ -1,0 +1,140 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>物种多样性指数-物种均匀度指数-计算</title>
+<script language="javascript">
+function LN(n)
+{
+   return Math.log(n)/Math.log(2);
+}
+function html(array)
+{
+	for(var k in array)
+	{
+		var obj = document.getElementById(k);
+		if(obj)
+		{
+			obj.innerHTML = array[k];
+		}
+	}
+}
+function calculate(t)
+{
+  var data = t.value;
+  var data_arr = data.split(/[\s\n\f\t]+/g);
+	
+   var S = 0;  //物种种数
+   var N = 0;  //总物种数量
+   
+   var H = 0; //物种多样性指数
+   var J = 0; //物种均匀性指数
+   var Hmax = 0;
+   
+   var data_length = data_arr.length; //所有的数据
+   
+   var valid_data = [];//有效的数据
+   //var unvalid = [];//无效的数据
+   
+   for(var i=0;i<data_length;i++){
+	   var va = parseInt(data_arr[i]);
+	   if(va>0){
+	     S++;
+		 N += va;
+		 valid_data.push(va);
+	   }else{
+	     //unvalid.push(data_length[i]);
+	   }
+   } 
+   for(var i=0;i<valid_data.length;i++){
+	  var nN = parseFloat(valid_data[i]/N);
+	  H += nN*LN(nN);
+   }
+   if(S<=1)
+   {
+	   return;
+   }
+   H = -H;
+   Hmax = LN(S);
+   J = H/Hmax;
+   html({
+	   'data_valid':valid_data.join("&nbsp;"),
+	   'data_N':N,
+	   'data_S':S,
+	   'data_H':H,
+	   'data_J':J
+	   });
+}
+</script>
+<style type="text/css">
+body{margin:0;padding:0;color: #5EB0DE;}
+.left{float:left;}
+.clear{clear:both;}
+.input-text {background-color: #fff;border: 1px solid #5EB0DE;padding: 2px 5px;width:550px;color: #5EB0DE;margin-left:40px;margin-top:7px;}
+table{background-color:#5EB0DE;width:562px;margin:20px 40px;}
+table td{background-color:#eee;color:#f00;white-space:normal;word-break:break-all;padding:2px 10px;}
+td.align-right{text-align:right;width:180px;color:#5EB0DE;}
+h4{margin:32px 0 0 40px;}
+</style>
+</head>
+<body>
+<h4 style="color:green;">物种多样性指数-物种均匀度指数-计算</h4>
+<div> 
+ <textarea rows="6" id="data" class="input-text" onkeyup="calculate(this)"></textarea>
+</div>
+<table cellspacing="1">
+	<tr>
+		<td class="align-right">参与计算的有效数据有:</td>
+		<td id="data_valid"></td>
+	</tr>
+	<tr>
+		<td class="align-right">物种总个体数:</td>
+		<td id="data_N"></td>
+	</tr>
+	<tr>
+		<td class="align-right">物种总类数:</td>
+		<td id="data_S"></td>
+	</tr>
+	<tr>
+		<td class="align-right">物种多样性指数:</td>
+		<td id="data_H"></td>
+	</tr>
+	<tr>
+		<td class="align-right">物种均匀度指数:</td>
+		<td id="data_J"></td>
+	</tr>
+</table>
+<script language="javascript">
+var tr = document.getElementsByTagName("tr");
+for(var k in tr)
+{
+	var current = tr[k];
+	current.onmouseover = function(){
+		var child = this.childNodes
+		for(var k in child)
+		{
+			if(child[k].style)
+			  child[k].style.backgroundColor='#fcc';
+		}
+	}
+    current.onmouseout = function(){
+    	var child = this.childNodes;
+    	for(var k in child)
+    	{
+    		if(child[k].style)
+			 child[k].style.backgroundColor='#eee'
+        }
+	}
+}
+var textarea = document.getElementById("data");
+textarea.onmouseover = function(){
+	this.style.backgroundColor = 'rgb(245,245,245)';
+	this.style.color = "rgb(10,10,10)";
+}
+textarea.onmouseout = function(){
+	 this.style.backgroundColor = '#fff';
+	 this.style.color = "#5EB0DE";
+}
+</script>
+</body>
+</html>
